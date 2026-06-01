@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumiaOS - Bare Metal Operating System</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --card: #ffffff;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        nav {
+            background-color: #0f172a;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        nav a:hover {
+            color: white;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 4rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        header h1 {
+            margin: 0 0 1rem 0;
+            font-size: 2.5rem;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            border: 1px solid var(--border);
+        }
+        h2 {
+            color: #0f172a;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        .download-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .dl-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        select, button {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+        }
+        button.primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button.primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-link {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+        .wiki-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .wiki-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .wiki-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .wiki-item h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .wiki-item a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .wiki-item ul {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+            color: #475569;
+        }
+        .wiki-item li {
+            margin-bottom: 0.3rem;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+        .release-info {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div style="font-weight: bold; font-size: 1.2rem;">LumiaOS</div>
+    <div>
+        <a href="#download">Download</a>
+        <a href="#wiki">Wiki</a>
+        <a href="https://github.com/switlydev/LumiaOS" target="_blank">GitHub</a>
+    </div>
+</nav>
+
+<header>
+    <h1>LumiaOS</h1>
+    <p>A fully from-scratch, bare-metal x86 operating system featuring a custom TCP/IP stack, software compositor, and integrated web browser.</p>
+</header>
+
+<div class="container">
+    
+    <!-- DOWNLOAD SECTION -->
+    <div class="card" id="download">
+        <h2>Latest Release</h2>
+        <p>Experience LumiaOS directly in QEMU, VirtualBox, or on real bare-metal hardware. Download the bootable ISO below.</p>
+        
+        <div class="download-section">
+            <div>
+                <strong id="release-version" style="font-size: 1.2rem;">v0.4.47 (Stable)</strong>
+                <div class="release-info" id="release-date">Checking latest version...</div>
+            </div>
+            
+            <div class="dl-controls">
+                <select id="arch-select">
+                    <option value="x86">x86 (32-bit)</option>
+                </select>
+                <button class="primary" id="dl-btn" onclick="downloadLatest()">Download ISO</button>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; text-align: right;">
+            <a href="https://github.com/switlydev/LumiaOS/releases" target="_blank" class="btn-link">View All Releases &rarr;</a>
+        </div>
+    </div>
+
+    <!-- WIKI / DOCUMENTATION SECTION -->
+    <div class="card" id="wiki">
+        <h2>LumiaOS Wiki & Documentation</h2>
+        <p>Dive deep into the architecture of LumiaOS. These documents explain how each subsystem is built from the ground up without any third-party C libraries.</p>
+        
+        <div class="wiki-grid">
+            
+            <div class="wiki-item">
+                <h3>1. Introduction</h3>
+                <ul>
+                    <li><a href="01_introduction/getting_started.md">Getting Started</a></li>
+                    <li><a href="01_introduction/architectural_overview.md">Architectural Overview</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>2. Kernel Core</h3>
+                <ul>
+                    <li><a href="02_kernel_core/memory_management.md">Memory Management & Paging</a></li>
+                    <li><a href="02_kernel_core/interrupts_and_pit.md">Interrupts, IDT & PIT</a></li>
+                    <li><a href="02_kernel_core/process_scheduler.md">Process Scheduler</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>3. GUI & Aero Compositor</h3>
+                <ul>
+                    <li><a href="03_gui_and_aero/compositor_engine.md">Compositor Engine (Double Buffer)</a></li>
+                    <li><a href="03_gui_and_aero/window_management.md">Window Management</a></li>
+                    <li><a href="03_gui_and_aero/graphics_drivers.md">Graphics Drivers (BGA & VGA)</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>4. Network Stack</h3>
+                <ul>
+                    <li><a href="04_network_stack/tcp_ip_layer.md">TCP/IP Layer (From Scratch)</a></li>
+                    <li><a href="04_network_stack/hardware_nic.md">Hardware NICs (E1000)</a></li>
+                    <li><a href="04_network_stack/crypto_tls.md">Crypto & Native TLS 1.2</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>5. File System</h3>
+                <ul>
+                    <li><a href="05_filesystem/vfs_layer.md">Virtual File System (VFS)</a></li>
+                    <li><a href="05_filesystem/lumiafs_and_disk.md">LumiaFS & Disk Operations</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>6. Built-in Applications</h3>
+                <ul>
+                    <li><a href="06_applications/lumia_browser.md">Lumia Browser Engine</a></li>
+                    <li><a href="06_applications/other_apps.md">File Explorer, Task Manager</a></li>
+                </ul>
+            </div>
+
+            <div class="wiki-item">
+                <h3>7. Development & SDK</h3>
+                <ul>
+                    <li><a href="07_development/contributing.md">Contributing Guidelines</a></li>
+                    <li><a href="07_development/building_apps_sdk.md">Building .lxe Applications</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    &copy; 2026 LumiaOS Development Team. Licensed under the MIT License.<br/>
+    "Bare Metal, High Signal"
+</footer>
+
+<script>
+    let downloadUrl = "https://github.com/switlydev/LumiaOS/releases/latest";
+
+    // Try to fetch the latest release from GitHub API
+    async function fetchLatestRelease() {
+        try {
+            const response = await fetch('https://api.github.com/repos/switlydev/LumiaOS/releases/latest');
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('release-version').innerText = data.name || data.tag_name;
+                
+                const date = new Date(data.published_at);
+                document.getElementById('release-date').innerText = `Released on: ${date.toLocaleDateString()}`;
+
+                // Look for an .iso asset
+                const isoAsset = data.assets.find(asset => asset.name.endsWith('.iso'));
+                if (isoAsset) {
+                    downloadUrl = isoAsset.browser_download_url;
+                } else {
+                    downloadUrl = data.html_url; // Fallback to the release page
+                }
+            } else {
+                document.getElementById('release-date').innerText = "Check GitHub for the latest release.";
+            }
+        } catch (error) {
+            console.error("Error fetching release:", error);
+            document.getElementById('release-date').innerText = "Unable to fetch latest release data.";
+        }
+    }
+
+    function downloadLatest() {
+        const arch = document.getElementById('arch-select').value;
+        console.log(`Preparing download for architecture: ${arch}`);
+        window.open(downloadUrl, '_blank');
+    }
+
+    // Initialize
+    fetchLatestRelease();
+</script>
+
+</body>
+</html>
