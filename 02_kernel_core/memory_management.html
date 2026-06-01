@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Management</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Memory Management</h1>
+<br>
+<p>LumiaOS features a custom memory management subsystem that handles physical memory allocation, virtual memory mapping (Paging), and dynamic heap allocation (<code>kmalloc</code>/<code>kfree</code>).</p>
+<br>
+<h2>Physical Memory (RAM)</h2>
+<br>
+<p>Physical memory is managed by <code>src/core/ram.cpp</code>. </p>
+<br>
+<h3>Boot Information</h3>
+<p>When the kernel boots, it reads the memory map provided by GRUB via the Multiboot specification (<code>multiboot_info_t</code>). The kernel determines the total available RAM and initializes its internal tracking structures.</p>
+<br>
+<h3>Page Frame Allocator</h3>
+<p>Physical memory is divided into <b>4KB frames</b>. The kernel uses a bitmap array (<code>ram_bitmap</code>) to keep track of free and used frames.</p>
+<ul>
+<li><code>ram_alloc_frame()</code>: Finds the first free bit in the bitmap, marks it as used, and returns the physical address.</li>
+<li><code>ram_free_frame()</code>: Clears the bit corresponding to a physical address, returning it to the free pool.</li>
+</ul>
+<br>
+<h2>Virtual Memory (Paging)</h2>
+<br>
+<p>Virtual memory is managed by <code>src/core/paging.cpp</code>. LumiaOS uses a 32-bit, two-level paging structure consisting of a <b>Page Directory</b> and <b>Page Tables</b>.</p>
+<br>
+<h3>Identity Mapping</h3>
+<p>Currently, LumiaOS uses a simplified <b>Identity Paging</b> model. This means that virtual addresses map directly to the same physical addresses (e.g., Virtual <code>0x100000</code> -> Physical <code>0x100000</code>).</p>
+<ul>
+<li>The kernel identity-maps the first 256MB of RAM during boot.</li>
+<li>This approach simplifies DMA (Direct Memory Access) for drivers (like Network and Disk) but means user-space applications do not currently have isolated address spaces.</li>
+</ul>
+<br>
+<h3>Framebuffer Mapping</h3>
+<p>The high-resolution graphical framebuffer (provided by the BGA driver, typically at physical address <code>0xFD000000</code>) is mapped dynamically by the kernel so the <code>Aero Compositor</code> can draw pixels to the screen.</p>
+<br>
+<h3>Page Faults</h3>
+<p>If code attempts to access unmapped memory or violates protection rules, a Page Fault exception (Interrupt 14) is triggered. </p>
+<ul>
+<li>The <code>page_fault_handler()</code> decodes the error and prints a diagnostic message (BSOD).</li>
+<li><b>Watchdog Integration:</b> If a GUI application causes a Page Fault, the kernel uses <code>setjmp</code>/<code>longjmp</code> to recover, forcefully closing the offending application without crashing the entire operating system.</li>
+</ul>
+<br>
+<h2>Dynamic Memory (Heap)</h2>
+<br>
+<p>Heap allocation is handled by a custom implementation of <code>kmalloc</code> and <code>kfree</code> located in <code>src/core/mem.cpp</code>.</p>
+<br>
+<h3>Allocation Strategy</h3>
+<p>The heap starts at a predefined boundary after the kernel code.</p>
+<ul>
+<li>It uses a hybrid approach: A fast <b>bump allocator</b> for the initial pass, coupled with a slot-reuse mechanism (an array of <code>allocation_t</code> structures tracking ptr, size, and used status) to recycle freed memory.</li>
+<li><code>kfree()</code> marks a slot as unused, making it available for subsequent <code>kmalloc()</code> calls of similar or smaller sizes.</li>
+</ul>
+<br>
+<h3>Process Limits (OOM Protection)</h3>
+<p>To prevent poorly written or malicious applications from exhausting system RAM and crashing the kernel, LumiaOS enforces strict memory limits.</p>
+<ul>
+<li><b>4MB Limit:</b> Every process (tracked via <code>_alloc_owner_slot</code>) is limited to 4 Megabytes of heap allocation.</li>
+<li>If an application requests more than 4MB, <code>kmalloc</code> returns <code>0</code> (NULL), which usually triggers an application-level assert, allowing the Watchdog to safely terminate the app.</li>
+</ul>
+<br>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architectural Overview</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Architectural Overview</h1>
+<br>
+<p>LumiaOS is designed as a <b>Monolithic Kernel</b> with a strong emphasis on isolating complex subsystems into manageable modules. It eschews the use of existing libraries (no <code>libc</code>, no Linux kernel headers) to ensure a pure, from-scratch learning and execution environment.</p>
+<br>
+<h2>Design Philosophy</h2>
+<p>1. <b>Bare Metal, High Signal</b>: Every line of code exists for a reason. There are no bloated wrappers or unnecessary abstractions.</p>
+<p>2. <b>Fail-Safe execution</b>: Applications should be able to crash without taking down the entire kernel.</p>
+<p>3. <b>Modularity</b>: The transition from a "Header-Only" architecture to a standard <code>.h</code> / <code>.cpp</code> structure ensures clean compilation boundaries and maintainability.</p>
+<br>
+<h2>System Layers</h2>
+<br>
+<h3>1. Bootloader (GRUB2 & Multiboot)</h3>
+<p>LumiaOS relies on the <b>Multiboot Specification</b>. The <code>boot.asm</code> file acts as the entry point, setting up a minimal stack and pushing the magic number and multiboot info structure to the C++ kernel entry point <code>kernel_main()</code>.</p>
+<br>
+<h3>2. The Core Kernel (<code>src/core/</code>)</h3>
+<p>This is the heart of the operating system. It runs in Ring 0 (highest privilege) and manages:</p>
+<ul>
+<li><b>GDT / IDT</b>: Global Descriptor Table and Interrupt Descriptor Table for hardware and software interrupts.</li>
+<li><b>Memory Management (<code>mem.cpp</code>, <code>paging.cpp</code>)</b>: Physical page allocation, virtual memory mapping (Identity Paging), and the <code>kmalloc</code> heap allocator.</li>
+<li><b>Process Scheduler (<code>process.cpp</code>, <code>pit.cpp</code>)</b>: A preemptive Round-Robin scheduler driven by the Programmable Interval Timer (PIT).</li>
+</ul>
+<br>
+<h3>3. Hardware Drivers (<code>src/drivers/</code>)</h3>
+<p>LumiaOS includes custom drivers to interface with specific hardware:</p>
+<ul>
+<li><b>PS/2 Mouse & Keyboard</b>: Event-driven input handling.</li>
+<li><b>BGA (Bochs Graphics Adapter)</b>: High-resolution (1024x768), 32-bpp framebuffer graphics.</li>
+<li><b>E1000 & PCnet</b>: Network Interface Card (NIC) drivers for packet transmission.</li>
+<li><b>ATA/IDE</b>: Block device drivers for reading/writing to hard disks.</li>
+</ul>
+<br>
+<h3>4. Virtual File System (<code>src/fs/</code>)</h3>
+<p>The VFS layer abstracts the underlying storage media.</p>
+<ul>
+<li>Applications interact with generic functions like <code>fs_read_file()</code> and <code>fs_write_file()</code>.</li>
+<li>Depending on the boot state, these calls are routed either to <b>RamFS</b> (in-memory, volatile) or <b>LumiaFS</b> (custom block-based disk filesystem, persistent).</li>
+</ul>
+<br>
+<h3>5. Network Stack (<code>src/net/</code>)</h3>
+<p>A completely custom TCP/IP stack implementation.</p>
+<ul>
+<li><b>Link Layer</b>: Ethernet frame parsing and ARP resolution.</li>
+<li><b>Internet Layer</b>: IPv4 and ICMP (Ping).</li>
+<li><b>Transport Layer</b>: UDP and a robust TCP state machine.</li>
+<li><b>Application Layer</b>: DNS resolution and HTTP/1.1 client implementation.</li>
+<li><b>Security</b>: A native, from-scratch TLS 1.2 implementation (<code>tls.cpp</code>, <code>crypto/</code>) for secure HTTPS communication.</li>
+</ul>
+<br>
+<h3>6. Aero Compositor & GUI (<code>src/display/</code>)</h3>
+<p>The graphical layer of LumiaOS.</p>
+<ul>
+<li>Implements a <b>software compositor</b> inspired by modern display servers (like Wayland/DWM).</li>
+<li>Manages an off-screen backbuffer to prevent screen tearing (Double Buffering).</li>
+<li>Handles Z-Order, Alpha Blending (transparency), and window event dispatching (clicks, drags, keyboard focus).</li>
+</ul>
+<br>
+<h3>7. Applications (<code>include/apps/</code>)</h3>
+<p>User-facing software integrated into the OS.</p>
+<ul>
+<li><b>Lumia Browser</b>: A tabbed web browser with a custom HTML/CSS rendering engine and smart download capabilities.</li>
+<li><b>File Explorer</b>: Graphical navigation of the LumiaFS directory structure.</li>
+<li><b>Task Manager</b>: Real-time monitoring of CPU usage, heap allocations, and process states.</li>
+</ul>
+<br>
+<h2>The C++ Transition</h2>
+<p>Historically, LumiaOS used a monolithic "Header-Only" design where implementation details were written inside <code>.h</code> files. The project is actively transitioning to a standard C++ model (<code>.h</code> for declarations, <code>.cpp</code> for definitions). The <code>build.sh</code> script automatically discovers and compiles all <code>.cpp</code> files in the <code>src/</code> directory.</p>
+<br>
+</body>
+</html>

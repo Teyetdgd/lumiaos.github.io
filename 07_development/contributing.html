@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contributing to LumiaOS</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Contributing to LumiaOS</h1>
+<br>
+<p>Thank you for your interest in contributing to LumiaOS! Because this is a bare-metal project built from scratch without standard libraries, contributing requires a specific mindset and adherence to strict architectural rules.</p>
+<br>
+<h2>Core Philosophy: "Bare Metal, High Signal"</h2>
+<ul>
+<li><b>No external dependencies:</b> Do not attempt to <code>#include <iostream></code> or link external C libraries. You must use the kernel's internal implementations (e.g., <code>print_string()</code>, <code>kmalloc()</code>).</li>
+<li><b>No lazy code:</b> If you build a new feature, you must also build the necessary infrastructure to support it securely and stably.</li>
+</ul>
+<br>
+<h2>Repository Etiquette</h2>
+<p>1. <b>Never use manual <code>git</code> commands.</b> The repository history is managed strictly via automated PowerShell scripts.</p>
+<p>2. To submit changes, use:</p>
+<p>   <code></code>`powershell</p>
+<p>   ./scripts/powershell/push-to-main.ps1 -Message "Added new feature X"</p>
+<p>   <code></code>`</p>
+<p>   *(Note: This applies primarily to the core maintainers. If you are submitting a PR on GitHub, follow standard fork-and-pull-request workflows, but ensure your commits are squashed logically).*</p>
+<br>
+<h2>Code Style</h2>
+<ul>
+<li><b>Indentation:</b> 4 spaces (no tabs).</li>
+<li><b>Naming:</b> </li>
+</ul>
+<p>  - Functions: <code>snake_case</code> (e.g., <code>gui_draw_rect</code>).</p>
+<p>  - Structs/Classes: <code>PascalCase</code> or <code>snake_case_t</code> (e.g., <code>LumiaWindow</code>, <code>pcb_t</code>).</p>
+<ul>
+<li><b>File Structure:</b> We are actively transitioning from header-only implementations to a standard <code>.h</code> and <code>.cpp</code> model. Place declarations in <code>include/</code> and definitions in <code>src/</code>.</li>
+</ul>
+<br>
+<h2>The "No-Panic" Rule</h2>
+<p>If you are writing user-facing or GUI code, <b>never</b> use a hard <code>KASSERT</code> or <code>while(1) hlt;</code> loop for predictable errors (like failing to load an image or allocating a small buffer).</p>
+<ul>
+<li>Use proper error handling and return codes.</li>
+<li>Rely on the <code>setjmp/longjmp</code> Watchdog mechanism only as a last resort for catastrophic failures.</li>
+</ul>
+<br>
+</body>
+</html>

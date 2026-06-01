@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumiaFS and Disk Operations</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>LumiaFS and Disk Operations</h1>
+<br>
+<p>While LumiaOS supports FAT32 parsing for USB drives (<code>fat32.cpp</code>), its primary persistent storage mechanism is a custom filesystem known as <b>LumiaFS</b>.</p>
+<br>
+<h2>Block Device Layer (ATA/IDE)</h2>
+<p>To read from the hard drive, LumiaOS uses the Block IO Layer (<code>src/fs/disk_io.cpp</code>).</p>
+<ul>
+<li>It communicates with the IDE controller via Port I/O (<code>0x1F0</code> primary bus).</li>
+<li>Uses <b>LBA28</b> (Logical Block Addressing) to read and write specific 512-byte sectors.</li>
+<li>Provides a simple interface: <code>disk_read_sectors()</code> and <code>disk_write_sectors()</code>.</li>
+</ul>
+<br>
+<h2>LumiaFS Architecture</h2>
+<p>LumiaFS (<code>src/fs/lumiafs.cpp</code>, <code>diskfs_core.cpp</code>) is a simple, robust file system designed specifically for the needs of this kernel.</p>
+<br>
+<h3>The Superblock</h3>
+<p>Located at a fixed LBA (Sector 5050), the Superblock contains the filesystem metadata:</p>
+<ul>
+<li>Magic Number (<code>0x4C554D49</code> - "LUMI").</li>
+<li>Total Sectors and Free Sectors.</li>
+<li>Pointer to the Root Directory.</li>
+</ul>
+<br>
+<h3>Directory Structure</h3>
+<p>Directories are stored as linked lists of structures on disk. Each entry contains:</p>
+<ul>
+<li>Filename (up to 32 characters).</li>
+<li>Attributes (Is Directory, Is Hidden).</li>
+<li><code>start_sector</code>: The LBA where the file's data begins.</li>
+<li><code>file_size</code>: The exact size of the file in bytes.</li>
+</ul>
+<br>
+<h3>The Installer</h3>
+<p>When the <code>installer_app.cpp</code> formats a new disk, it completely overwrites the Superblock, clears the root directory sectors, and creates the default OS hierarchy (<code>/LumiaOS/home</code>, <code>/LumiaOS/system</code>).</p>
+<br>
+</body>
+</html>

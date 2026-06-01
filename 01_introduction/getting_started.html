@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started with LumiaOS</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Getting Started with LumiaOS</h1>
+<br>
+<p>Welcome to <b>LumiaOS</b>, a 32-bit (x86) bare-metal operating system built entirely from scratch. This guide will help you understand how to build the project and run it in an emulator.</p>
+<br>
+<h2>Prerequisites</h2>
+<br>
+<p>LumiaOS requires a specific cross-compiled toolchain to ensure the generated code does not link against your host operating system's libraries (like Linux <code>glibc</code> or Windows <code>msvcrt</code>).</p>
+<br>
+<p>You will need the following tools:</p>
+<p>1. <b><code>i686-elf-gcc</code> and <code>i686-elf-ld</code></b>: The standard cross-compiler for 32-bit x86 OS development.</p>
+<p>2. <b><code>nasm</code></b>: The Netwide Assembler, used for compiling bootloaders, ISR stubs, and low-level context switching.</p>
+<p>3. <b><code>grub-mkrescue</code> & <code>xorriso</code></b>: Required to pack the compiled kernel into a bootable <code>.iso</code> image using GRUB2.</p>
+<p>4. <b><code>qemu-system-i386</code></b>: The recommended emulator for running and debugging the OS.</p>
+<br>
+<p>*(If you are on Windows, we highly recommend using WSL - Windows Subsystem for Linux - to set up these tools).*</p>
+<br>
+<h2>Building the OS</h2>
+<br>
+<p>LumiaOS uses a custom bash script (<code>build.sh</code>) to handle the entire compilation, linking, and ISO generation process. </p>
+<br>
+<p>To build the kernel, open your terminal and run:</p>
+<pre><code>
+./build.sh
+</code></pre>
+<br>
+<p>If successful, the script will output a bootable image located at <code>build/lumia.iso</code>.</p>
+<br>
+<h2>Running in QEMU</h2>
+<br>
+<p>You can boot the generated ISO directly in QEMU. However, LumiaOS supports advanced features like Networking and Persistent Storage, which require additional QEMU flags.</p>
+<br>
+<h3>Basic Boot (Live Mode)</h3>
+<pre><code>
+qemu-system-i386 -cdrom build/lumia.iso -m 256M -vga std
+</code></pre>
+<p>*Note: In Live Mode, changes to the file system are written to RamFS and will be lost upon reboot.*</p>
+<br>
+<h3>Full Boot (With Hard Disk and Network)</h3>
+<p>To enable persistent storage and network connectivity:</p>
+<br>
+<p>1. <b>Create a virtual hard disk</b> (only needed the first time):</p>
+<p>   <code></code>`bash</p>
+<p>   dd if=/dev/zero of=build/disk.img bs=1M count=64</p>
+<p>   <code></code>`</p>
+<p>2. <b>Run QEMU</b>:</p>
+<p>   <code></code>`bash</p>
+<p>   qemu-system-i386 -cdrom build/lumia.iso -hda build/disk.img -m 256M -vga std \</p>
+<p>   -netdev user,id=net0 -device e1000,netdev=net0</p>
+<p>   <code></code>`</p>
+<br>
+<h3>First Boot Experience</h3>
+<p>When you boot with an empty <code>disk.img</code>, LumiaOS will recognize the unformatted drive and launch the <b>LumiaOS Setup Wizard</b>. Follow the on-screen prompts to format the disk (using LumiaFS) and create your user account. </p>
+<br>
+<p>On subsequent boots, the system will start in <b>Installed Mode</b>, asking for your credentials before dropping you into the terminal or GUI.</p>
+<br>
+<h2>Starting the Desktop Environment</h2>
+<p>Once logged in via the command line interface (CLI), type the following command to launch the Aero Compositor and enter the graphical desktop:</p>
+<pre><code>
+user@lumia-pc:/$ gui
+</code></pre>
+<br>
+</body>
+</html>

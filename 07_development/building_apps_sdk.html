@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Applications (SDK)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Building Applications (SDK)</h1>
+<br>
+<p>While LumiaOS has built-in applications (like the Browser and Explorer) compiled directly into the kernel, it also supports executing external, dynamically loaded programs using the <code>.lxe</code> (Lumia Executable) format.</p>
+<br>
+<h2>The Lumia SDK</h2>
+<p>Located in the <code>sdk/</code> directory, the SDK provides the necessary headers and a custom linker script to compile standard C code into a format LumiaOS can run.</p>
+<br>
+<h3>Why not ELF?</h3>
+<p>While standard ELF files are powerful, writing a full ELF loader and dynamic linker in a minimal kernel is complex. The <code>.lxe</code> format is a streamlined, flat-binary format with a specific header that the LumiaOS <code>bin_loader.h</code> can easily parse, map into memory, and execute.</p>
+<br>
+<h2>Writing a "Hello World" App</h2>
+<br>
+<p>1. Create a C file (<code>hello.c</code>):</p>
+<p>   <code></code>`c</p>
+<p>   #include "lumia.h"</p>
+<br>
+<p>   void main() {</p>
+<p>       sys_print("Hello from Lumia SDK!\n");</p>
+<p>       sys_exit(0);</p>
+<p>   }</p>
+<p>   <code></code>`</p>
+<br>
+<p>2. Notice that we include <code>"lumia.h"</code>. This header provides wrappers around the <code>int 0x80</code> system calls, allowing you to interact with the kernel (printing to the terminal, opening files, etc.) without knowing the underlying interrupt mechanics.</p>
+<br>
+<h2>Compiling</h2>
+<p>The SDK uses a custom toolchain process:</p>
+<p>1. <code>gcc</code> compiles the C code into an object file.</p>
+<p>2. <code>ld</code> links it using <code>sdk/toolchain/linker.ld</code> to ensure the code expects to be loaded at the correct virtual address (typically <code>0x40000000</code>).</p>
+<p>3. A custom tool (<code>elf2lxe.c</code>) strips the unnecessary ELF metadata and prepends the <code>.lxe</code> header.</p>
+<br>
+<pre><code>
+cd sdk/examples
+make
+</code></pre>
+<br>
+<h2>Running Your App</h2>
+<p>Once compiled, you will get a file like <code>hello.lxe</code>. </p>
+<p>1. Copy this file to your LumiaOS hard drive (e.g., into <code>/LumiaOS/apps/</code>).</p>
+<p>2. Boot LumiaOS.</p>
+<p>3. Open the Terminal and type:</p>
+<p>   <code></code>`bash</p>
+<p>   run /LumiaOS/apps/hello.lxe</p>
+<p>   <code></code>`</p>
+<br>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Interface Cards (NIC)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Network Interface Cards (NIC)</h1>
+<br>
+<p>To connect the TCP/IP stack to the physical (or virtual) world, LumiaOS includes native drivers for popular network interface cards.</p>
+<br>
+<h2>Intel PRO/1000 (E1000)</h2>
+<br>
+<p>Located in <code>src/net/nic_e1000.cpp</code>. The E1000 is the default and most robust network adapter supported by LumiaOS (commonly used in QEMU and VirtualBox).</p>
+<br>
+<h3>PCI Initialization</h3>
+<p>During the boot sequence, the PCI bus is scanned for the E1000 Vendor ID (<code>0x8086</code>) and Device IDs (<code>0x100E</code> / <code>0x10D3</code>).</p>
+<ul>
+<li><b>MMIO Base:</b> The driver extracts the Base Address Register (BAR0) to find where the NIC's registers are mapped in physical memory.</li>
+<li><b>Paging:</b> The kernel maps these physical addresses into virtual memory so the driver can safely interact with the hardware registers.</li>
+</ul>
+<br>
+<h3>Ring Buffers (RX / TX)</h3>
+<p>The E1000 driver uses DMA (Direct Memory Access) via Ring Buffers.</p>
+<ul>
+<li><b>Receive (RX):</b> The driver allocates an array of <code>e1000_rx_desc</code> structures. When the NIC receives a packet from the network, it writes the data directly to the memory pointed to by the descriptor and fires an interrupt (IRQ).</li>
+<li><b>Transmit (TX):</b> To send a packet, the TCP/IP stack fills a buffer, and the E1000 driver updates a <code>e1000_tx_desc</code> structure. It then advances the Tail pointer register (<code>TDT</code>), signaling the hardware to fetch the packet from RAM and transmit it over the wire.</li>
+</ul>
+<br>
+<h2>AMD PCnet-FAST III (RTL8139 / PCnet)</h2>
+<br>
+<p>Located in <code>src/net/nic_pcnet.cpp</code>. This is a legacy driver kept for compatibility with older emulators. It operates similarly to the E1000 but relies more on Port I/O (<code>inb</code>/<code>outb</code>) rather than strict MMIO.</p>
+<br>
+<h3>The NIC Abstraction Layer</h3>
+<p>Both drivers implement a common interface defined in <code>src/net/nic.cpp</code>. This allows the upper IP/Ethernet layers to call a generic <code>nic_send_packet()</code> function, without needing to know whether the underlying hardware is an Intel E1000 or an AMD PCnet adapter.</p>
+<br>
+</body>
+</html>

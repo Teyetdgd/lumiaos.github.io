@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography and Native TLS 1.2</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Cryptography and Native TLS 1.2</h1>
+<br>
+<p>A modern operating system needs secure communications. Rather than relying on massive external libraries like OpenSSL or mbedTLS, LumiaOS includes a <b>native, from-scratch TLS 1.2 implementation</b>.</p>
+<br>
+<h2>The Cryptographic Primitives</h2>
+<br>
+<p>The <code>src/crypto/</code> directory contains all the underlying mathematical algorithms required to establish a secure connection. These are written purely in C/C++ without external dependencies.</p>
+<br>
+<p>1. <b>AES-128 / AES-GCM:</b> </p>
+<p>   - <code>aes128.cpp</code>: The core Advanced Encryption Standard block cipher.</p>
+<p>   - <code>ghash.cpp</code>: Galois Hash function used for message authentication.</p>
+<p>   - <code>aes_gcm.cpp</code>: The Galois/Counter Mode authenticated encryption mechanism, which is the standard cipher suite for modern TLS.</p>
+<br>
+<p>2. <b>X25519 (Elliptic Curve Diffie-Hellman):</b></p>
+<p>   - <code>x25519.cpp</code>: Implements the Curve25519 key exchange algorithm. This allows the client (LumiaOS) and the server to securely agree on a shared secret over an insecure channel.</p>
+<br>
+<p>3. <b>Hashing and HMAC:</b></p>
+<p>   - <code>sha256.cpp</code>: The SHA-256 cryptographic hash function.</p>
+<p>   - <code>hmac_sha256.cpp</code>: Hash-based Message Authentication Code used for verifying data integrity.</p>
+<p>   - <code>tls_prf.cpp</code>: The TLS Pseudo-Random Function, used to derive the final encryption keys from the shared secret.</p>
+<br>
+<p>4. <b>X.509 Certificates:</b></p>
+<p>   - <code>asn1.cpp</code> & <code>x509.cpp</code>: Basic parsers for ASN.1 DER-encoded structures. Currently used to extract public keys from server certificates during the handshake.</p>
+<br>
+<h2>The TLS 1.2 Handshake State Machine</h2>
+<br>
+<p>The logic for establishing a secure connection is housed in <code>src/net/tls.cpp</code>. It acts as a wrapper over the raw TCP socket.</p>
+<br>
+<p>When the Lumia Browser encounters an <code>https://</code> URL, it enters the TLS handshake state machine:</p>
+<p>1. <b>ClientHello:</b> The OS sends its supported cipher suites (specifically <code>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</code>) and a random sequence.</p>
+<p>2. <b>ServerHello & Certificate:</b> The server responds with its chosen cipher, its certificate chain, and its X25519 public key.</p>
+<p>3. <b>Key Exchange:</b> The OS parses the server's public key, generates its own ephemeral X25519 keypair, and calculates the shared secret.</p>
+<p>4. <b>ClientKeyExchange & Finished:</b> The OS sends its public key to the server, uses <code>tls_prf</code> to derive the Master Secret and AES keys, and switches the socket into encrypted mode.</p>
+<p>5. <b>Application Data:</b> All subsequent HTTP GET requests and responses are encrypted and decrypted using <code>aes_gcm</code>.</p>
+<br>
+<p>*Note: The native TLS stack is currently highly experimental and strictly tied to AES-128-GCM and X25519. It is designed as an educational proof-of-concept rather than a production-ready security boundary.*</p>
+<br>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Aero Compositor Engine</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>The Aero Compositor Engine</h1>
+<br>
+<p>LumiaOS features a custom software-based windowing system heavily inspired by modern display servers (such as Wayland or DWM), referred to internally as the <b>Aero Compositor</b> (<code>src/display/aero_compositor.cpp</code>).</p>
+<br>
+<h2>Architecture</h2>
+<br>
+<p>Unlike older operating systems that allowed applications to draw directly to the screen (leading to tearing and graphical artifacts), LumiaOS enforces strict isolation between application rendering and physical screen output.</p>
+<br>
+<h3>1. The Backbuffer (Double Buffering)</h3>
+<p>All graphical operations are first drawn to an off-screen memory region known as the <b>Backbuffer</b> (allocated dynamically based on the current resolution, e.g., 8MB for 1024x768x32bpp).</p>
+<ul>
+<li>Once the compositor completes a full drawing cycle (background, icons, windows, cursor), it calls <code>flip_buffer()</code>.</li>
+<li><code>flip_buffer()</code> copies the entire backbuffer to the physical hardware framebuffer (mapped at <code>0xFD000000</code> for BGA) in one rapid block transfer. This eliminates screen flickering and tearing.</li>
+</ul>
+<br>
+<h3>2. The Render Loop</h3>
+<p>The <code>lumia_compositor_start()</code> function acts as the infinite loop for the GUI thread. In every iteration, it:</p>
+<p>1. <b>Reads Input:</b> Processes mouse movement and keyboard keystrokes via <code>lumia_process_input()</code>.</p>
+<p>2. <b>Executes App Logic:</b> Iterates through all active windows and calls their <code>app_tick()</code> functions, giving them CPU time to process networking, calculations, or layout changes.</p>
+<p>3. <b>Paints:</b> If <code>needs_full_repaint</code> is true, it redraws the wallpaper, desktop icons, and windows (from lowest Z-Order to highest).</p>
+<p>4. <b>Draws Cursor:</b> Overlays the hardware-independent mouse cursor on top of the final image.</p>
+<br>
+<h2>Visual Effects</h2>
+<br>
+<h3>Alpha Blending (Transparency)</h3>
+<p>The compositor supports real-time software alpha blending. Each pixel in LumiaOS is 32-bit (ARGB). The <code>blend_colors()</code> function mathematically combines the background pixel with the foreground pixel based on the <code>alpha</code> channel, enabling:</p>
+<ul>
+<li>Semi-transparent window title bars (Aero Glass effect).</li>
+<li>Smooth drop shadows around active windows.</li>
+<li>Context menu overlay dimming.</li>
+</ul>
+<br>
+<h3>Taskbar Live Previews</h3>
+<p>LumiaOS includes a unique feature where hovering over a taskbar icon provides a real-time, scaled-down snapshot of the running application.</p>
+<ul>
+<li>When an application renders its content, the compositor intercepts the pixel data within the window's clipping bounds.</li>
+<li>It applies a fast nearest-neighbor scaling algorithm to fit the content into a fixed thumbnail size while preserving the aspect ratio.</li>
+</ul>
+<br>
+</body>
+</html>

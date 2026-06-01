@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphics Drivers (VGA & BGA)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Graphics Drivers (VGA & BGA)</h1>
+<br>
+<p>LumiaOS bypasses the BIOS (which is inaccessible in 32-bit Protected Mode) and communicates directly with graphics hardware via MMIO (Memory Mapped I/O) and I/O ports.</p>
+<br>
+<h2>Standard VGA (Legacy Mode)</h2>
+<br>
+<p>During early boot or in environments without advanced graphics support, LumiaOS can fallback to standard VGA mode <code>0x13</code> (320x200 with 256 colors).</p>
+<ul>
+<li>Initialization is done by writing specific byte sequences directly to the VGA CRTC, Sequencer, and Graphics Controller ports (<code>0x3C0</code> - <code>0x3D5</code>).</li>
+<li>While functional, this mode is deprecated for the primary desktop experience and is primarily used for testing or ultra-low-resource environments.</li>
+</ul>
+<br>
+<h2>Bochs Graphics Adapter (BGA)</h2>
+<br>
+<p>The primary display driver for LumiaOS is the <b>BGA (Bochs Graphics Adapter)</b> driver (<code>src/display/vga.cpp</code>). BGA is a widely supported paravirtualized graphics interface used by QEMU, VirtualBox, and Bochs.</p>
+<br>
+<h3>PCI Detection</h3>
+<p>During boot, the PCI bus is scanned (<code>src/net/pci.cpp</code>) for the specific Vendor ID (<code>0x1234</code>) and Device ID (<code>0x1111</code>) associated with the BGA device.</p>
+<br>
+<h3>Initialization Sequence</h3>
+<p>1. <b>Version Verification:</b> The driver reads the VBE <code>INDEX</code> register (<code>0x01CE</code>) to ensure the emulator supports at least BGA version 5.</p>
+<p>2. <b>Resolution Request:</b> It writes the desired resolution (e.g., <code>1024</code> to the X-Res register and <code>768</code> to the Y-Res register) and sets the bit depth to <code>32</code> (ARGB).</p>
+<p>3. <b>Enable VBE:</b> Finally, it writes the <code>VBE_DISPI_ENABLED</code> and <code>VBE_DISPI_LFB_ENABLED</code> flags to the Enable register.</p>
+<br>
+<h3>The Linear Framebuffer (LFB)</h3>
+<p>Once enabled, the BGA device exposes a Linear Framebuffer—a continuous block of physical memory (usually mapped at <code>0xFD000000</code>) representing the screen pixels.</p>
+<ul>
+<li>The memory manager (<code>paging.cpp</code>) maps this large physical chunk (e.g., 16MB) into the kernel's virtual address space.</li>
+<li>The <code>Aero Compositor</code> uses this mapped pointer to execute its rapid <code>flip_buffer()</code> block transfers.</li>
+</ul>
+<br>
+</body>
+</html>

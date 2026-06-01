@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumia Browser</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Lumia Browser</h1>
+<br>
+<p>The crown jewel of LumiaOS applications is the <b>Lumia Browser</b> (<code>include/apps/browser.h</code>). It is a from-scratch web rendering engine embedded directly into the operating system.</p>
+<br>
+<h2>The Rendering Pipeline</h2>
+<br>
+<p>Unlike terminal-based browsers (like Lynx), Lumia Browser aims to replicate the modern Box Model of HTML/CSS.</p>
+<br>
+<p>1. <b>Chunked Decoding:</b> When the HTTP response arrives, if it uses <code>Transfer-Encoding: chunked</code>, the browser decodes it in-place to extract raw HTML.</p>
+<p>2. <b>DOM Parser:</b> The HTML string is fed into <code>dom_parse()</code> (<code>browser_dom.h</code>). This builds a tree of <code>DOMNode</code> structures (tags, text, attributes) using an arena allocator for speed.</p>
+<p>3. <b>CSS Engine:</b> <code>css_collect_from_html()</code> parses any <code><style></code> blocks in the document. It generates a cascading stylesheet rule set.</p>
+<p>4. <b>Layout (Box Model):</b> The <code>dom_layout_block()</code> function recursively walks the DOM tree. It calculates the <code>X</code>, <code>Y</code>, <code>Width</code>, and <code>Height</code> of every element based on CSS rules (margin, padding, display type).</p>
+<p>5. <b>Painting:</b> Finally, <code>dom_paint()</code> executes hardware framebuffer commands (<code>draw_rect</code>, <code>draw_string</code>) based on the computed geometry.</p>
+<br>
+<h2>Browser Features</h2>
+<br>
+<h3>Smart Download Manager</h3>
+<p>When a user clicks a link (which is hit-tested via an array of <code>BrowserLink</code> bounding boxes generated during the layout phase), the browser checks the extension.</p>
+<ul>
+<li>If it ends in <code>.bin</code>, <code>.zip</code>, <code>.exe</code>, or <code>.bmp</code>, the browser prevents navigation.</li>
+<li>It displays a visual Download Bar at the bottom of the window.</li>
+<li>Upon completion, the raw bytes are automatically saved to the VFS path <code>/LumiaOS/home/user/downloads/</code>.</li>
+</ul>
+<br>
+<h3>Bookmarks System</h3>
+<p>Users can save sites via the <code>*</code> (Star) button.</p>
+<ul>
+<li>Bookmarks are serialized into a string format and written permanently to <code>/LumiaOS/config/bookmarks.txt</code>.</li>
+<li>The <code>lumia://bookmarks</code> internal URL generates a dynamic HTML page by reading this file from the disk, demonstrating tight integration between the OS file system and the browser rendering engine.</li>
+</ul>
+<br>
+</body>
+</html>

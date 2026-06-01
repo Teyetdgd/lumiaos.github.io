@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual File System (VFS)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Virtual File System (VFS)</h1>
+<br>
+<p>The Virtual File System (<code>src/fs/fs.cpp</code>) acts as an abstraction layer between user-space applications (or kernel subsystems) and the physical storage media.</p>
+<br>
+<h2>Architecture</h2>
+<br>
+<p>In LumiaOS, an application never calls disk hardware drivers directly. Instead, it uses standard POSIX-like functions:</p>
+<ul>
+<li><code>fs_open()</code>, <code>fs_read_file()</code>, <code>fs_write_file()</code>, <code>fs_change_directory()</code>.</li>
+</ul>
+<br>
+<p>The VFS layer takes these calls and looks at the <b>Mount Table</b> (<code>src/fs/mount_table.cpp</code>). The mount table maps logical paths (like <code>/home/</code>) to specific storage backends.</p>
+<br>
+<h2>Fallback Mechanism</h2>
+<p>A unique feature of LumiaOS is its resilient fallback system. </p>
+<ul>
+<li>If the OS is booted from a Live CD (without an attached hard drive), the VFS automatically routes all file operations to <b>RamFS</b> (a volatile, in-memory filesystem).</li>
+<li>If a hard drive is detected and formatted, the VFS routes operations to <b>LumiaFS</b>, ensuring data persistence.</li>
+<li>This allows applications (like the Browser saving bookmarks) to use the exact same code regardless of the underlying hardware state.</li>
+</ul>
+<br>
+<h2>Device Abstraction (Dev Layer)</h2>
+<p>The VFS also manages the <code>/dev/</code> namespace (<code>src/fs/dev_layer.cpp</code>). Physical hardware devices, such as the ATA disk (<code>/dev/d0</code>), are exposed as files, allowing the filesystem drivers themselves to interact with hardware using standard read/write paradigms.</p>
+<br>
+</body>
+</html>

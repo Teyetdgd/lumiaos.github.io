@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Built-in Applications</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Built-in Applications</h1>
+<br>
+<p>LumiaOS ships with a suite of built-in GUI applications, serving as both utilities for the user and reference implementations for developers.</p>
+<br>
+<h3>File Explorer</h3>
+<ul>
+<li><b>Location:</b> <code>include/apps/file_explorer.h</code></li>
+<li>A graphical interface for the Virtual File System. It allows users to navigate directories, click on files, and automatically launch associated programs (e.g., opening <code>.bmp</code> files in the Image Viewer).</li>
+</ul>
+<br>
+<h3>Task Manager</h3>
+<ul>
+<li><b>Location:</b> <code>include/apps/taskmgr.h</code></li>
+<li>Reads directly from the kernel's process table and heap tracking structures. It displays real-time statistics including CPU usage, total RAM, and per-process memory consumption (respecting the 4MB Watchdog limit).</li>
+</ul>
+<br>
+<h3>LumiaVim</h3>
+<ul>
+<li><b>Location:</b> <code>include/editor/lumiavim.h</code></li>
+<li>A modal text editor inspired by Vim. It supports basic Normal and Insert modes, allowing users to edit configuration files or scripts directly from the command line or GUI terminal.</li>
+</ul>
+<br>
+<h3>Games</h3>
+<ul>
+<li><b>Location:</b> <code>include/apps/games_app.h</code></li>
+<li>To demonstrate the capabilities of the Aero Compositor, the OS includes several classic games:</li>
+</ul>
+<p>  - <b>Minesweeper:</b> Demonstrates complex grid rendering and mouse-click logic.</p>
+<p>  - <b>Snake & Tetris:</b> Demonstrate keyboard event handling and game-loop timing tied to the PIT.</p>
+<br>
+</body>
+</html>

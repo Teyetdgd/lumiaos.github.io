@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interrupts and Timing (IDT & PIT)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Interrupts and Timing (IDT & PIT)</h1>
+<br>
+<p>Interrupts are the foundation of hardware interaction and multitasking in LumiaOS. The system relies on the Interrupt Descriptor Table (IDT) to catch exceptions and hardware signals, and the Programmable Interval Timer (PIT) to drive the scheduler.</p>
+<br>
+<h2>Interrupt Descriptor Table (IDT)</h2>
+<br>
+<p>The IDT (<code>src/core/idt.cpp</code>) tells the CPU where to jump when an interrupt or exception occurs.</p>
+<br>
+<h3>Exceptions (0-31)</h3>
+<p>The first 32 interrupts are reserved by Intel for CPU exceptions.</p>
+<ul>
+<li><b>ISR 13 (General Protection Fault):</b> Triggered by privilege violations.</li>
+<li><b>ISR 14 (Page Fault):</b> Handled by <code>page_fault_handler()</code> to catch bad memory accesses.</li>
+<li>If an unhandled exception occurs, the system will halt with a Kernel Panic.</li>
+</ul>
+<br>
+<h3>Hardware Interrupts (IRQs)</h3>
+<p>Hardware devices (like the Keyboard, Mouse, and Disk) send signals via the Programmable Interrupt Controller (PIC).</p>
+<ul>
+<li>The Master and Slave PICs are remapped during boot so IRQs 0-15 map to IDT vectors 32-47 (avoiding collision with CPU exceptions).</li>
+<li><code>irq_register_handler(int irq, irq_handler_t handler)</code> allows device drivers to attach their specific C++ functions to hardware events.</li>
+</ul>
+<br>
+<h2>The Programmable Interval Timer (PIT)</h2>
+<br>
+<p>The PIT (<code>src/core/pit.cpp</code>) is the heartbeat of LumiaOS. It is connected to IRQ0 (Interrupt 32) and fires thousands of times per second.</p>
+<br>
+<h3>Tick Management</h3>
+<p>Every time the PIT fires, <code>pit_timer_handler()</code> increments a global <code>timer_ticks</code> counter. This counter is used throughout the OS for:</p>
+<ul>
+<li><code>sleep()</code> functions.</li>
+<li>Animations in the GUI.</li>
+<li>Network timeouts.</li>
+</ul>
+<br>
+<h3>The Watchdog Mechanism</h3>
+<p>To prevent the OS from freezing, LumiaOS employs a Watchdog timer inside the PIT handler.</p>
+<ul>
+<li>When a GUI application's event loop (<code>app_tick</code>) begins, a timestamp is recorded.</li>
+<li>If the PIT handler detects that the application has been executing for more than 2 seconds (e.g., stuck in a <code>while(1)</code> loop), it triggers the Watchdog.</li>
+<li>The Watchdog forcefully breaks out of the application's execution context using <code>setjmp/longjmp</code>, rescuing the kernel from a total freeze.</li>
+</ul>
+<br>
+<h2>System Calls (Ring 3 to Ring 0)</h2>
+<br>
+<p>LumiaOS reserves Interrupt <code>0x80</code> for System Calls. </p>
+<ul>
+<li>When an application (or the <code>.lxe</code> runtime) needs a kernel service (like reading a file or creating a window), it triggers <code>int 0x80</code>.</li>
+<li>The <code>syscall_handler()</code> in <code>src/core/syscall_handler.cpp</code> decodes the requested function number in the <code>eax</code> register and dispatches the call to the appropriate kernel subsystem.</li>
+</ul>
+<br>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Scheduler & Multitasking</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Process Scheduler & Multitasking</h1>
+<br>
+<p>LumiaOS supports concurrent execution of multiple tasks through a <b>Preemptive Round-Robin Scheduler</b>.</p>
+<br>
+<h2>Process Control Block (PCB)</h2>
+<br>
+<p>Every running task in LumiaOS is represented by a <code>pcb_t</code> structure (<code>include/core/process.h</code>).</p>
+<p>The PCB holds critical state information for a process:</p>
+<ul>
+<li><code>pid</code>: Process ID.</li>
+<li><code>state</code>: Status (Ready, Running, Blocked, Sleeping).</li>
+<li><code>eip</code>: Instruction Pointer (where the process is currently executing).</li>
+<li><code>esp</code> / <code>ebp</code>: Stack pointers.</li>
+<li>Register states (eax, ebx, ecx, edx, esi, edi).</li>
+</ul>
+<br>
+<h2>Context Switching</h2>
+<br>
+<p>Context switching is the mechanism by which the CPU stops executing one process and begins executing another.</p>
+<br>
+<p>1. <b>The Timer Interrupt</b>: The PIT fires an interrupt on IRQ0, temporarily halting the current process and jumping into kernel code.</p>
+<p>2. <b>State Saving</b>: The low-level assembly stub <code>proc_switch.asm</code> pushes the current CPU registers onto the stack and saves the stack pointer (<code>esp</code>) into the current process's PCB.</p>
+<p>3. <b>Selection</b>: The <code>proc_schedule()</code> function looks at the process table, finds the next process in the <code>PROC_READY</code> state, and marks it as <code>PROC_RUNNING</code>.</p>
+<p>4. <b>Restoration</b>: The assembly stub loads the stack pointer of the *new* process, pops its registers, and uses <code>iret</code> to jump back into the new process's execution flow.</p>
+<br>
+<h2>The GUI Compositor vs. Processes</h2>
+<br>
+<p>It is important to note the distinction between true background processes and GUI applications in the current architecture:</p>
+<br>
+<ul>
+<li><b>True Processes (<code>.lxe</code> binaries)</b>: These are spawned by the Shell or File Explorer and run as distinct entries in the Process Table, taking advantage of preemptive multitasking.</li>
+<li><b>GUI Applications (Browser, Task Manager)</b>: Currently, built-in GUI apps run cooperatively within the Aero Compositor's main loop. The compositor iterates through windows and calls their <code>app_tick</code> functions. </li>
+</ul>
+<br>
+<p>*(Future roadmap items include moving GUI applications into their own isolated preemptive processes using the <code>.lxe</code> execution format).*</p>
+<br>
+</body>
+</html>

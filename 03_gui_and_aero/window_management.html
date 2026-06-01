@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Window Management</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; max-width: 800px; margin: 0 auto; padding: 2rem; }
+        h1, h2, h3 { color: #2563eb; }
+        code { background: #e2e8f0; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { margin-bottom: 2rem; display: inline-block; font-weight: bold; background: #e2e8f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">&larr; Back to Wiki Home</a>
+    <h1>Window Management</h1>
+<br>
+<p>The Window Manager in LumiaOS handles the lifecycle, geometry, and user interactions for all GUI applications.</p>
+<br>
+<h2>Window Structure (<code>LumiaWindow</code>)</h2>
+<br>
+<p>Every window is defined by a <code>LumiaWindow</code> struct (<code>include/gui/aero/aero_types.h</code>), which contains:</p>
+<ul>
+<li><b>Geometry:</b> <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>.</li>
+<li><b>State Flags:</b> <code>visible</code>, <code>minimized</code>, <code>maximized</code>, <code>active</code>.</li>
+<li><b>Identity:</b> <code>id</code>, <code>pid</code>, <code>title</code>, <code>type</code> (used to route events to specific app handlers).</li>
+<li><b>Callbacks:</b> Function pointers for <code>app_tick</code> (logic) and <code>app_cleanup</code> (destruction).</li>
+</ul>
+<br>
+<h2>Event Dispatching & Input Handling</h2>
+<br>
+<p>All raw PS/2 mouse and keyboard interrupts are enqueued into circular buffers. The compositor drains these buffers in <code>lumia_process_input()</code> (<code>include/gui/aero/aero_input.h</code>).</p>
+<br>
+<h3>Hit Testing and Focus</h3>
+<p>When the user clicks the mouse:</p>
+<p>1. The system performs a reverse-iteration (highest Z-Order to lowest) to find the first window bounding box that contains the <code>(x, y)</code> coordinates.</p>
+<p>2. If a window is hit, it is pulled to the front (highest Z-Order) via <code>lumia_focus_window()</code>.</p>
+<p>3. The click coordinates are then converted from *Screen Space* to *Window Space* (relative coordinates) and passed to the specific application's click handler (e.g., <code>browser_handle_click</code>).</p>
+<br>
+<h3>Dragging and Resizing</h3>
+<ul>
+<li><b>Dragging:</b> If a click lands on the title bar (and is not consumed by custom app controls like Browser Tabs), the compositor locks into dragging mode. Mouse delta movements directly update the window's <code>(x, y)</code> coordinates.</li>
+<li><b>Resizing:</b> Intrusive edge-resizing has been intentionally disabled for stability. Instead, windows feature a dedicated <b>Resize Handle</b> in the bottom-right corner. Clicking and dragging this specific area updates the <code>width</code> and <code>height</code>, triggering a <code>layout_dirty</code> flag that forces the internal application (like the DOM engine) to recalculate its element positions.</li>
+</ul>
+<br>
+<h2>Application Sandboxing (Watchdog)</h2>
+<br>
+<p>GUI applications run cooperatively within the compositor thread. To prevent a single poorly-written application from freezing the entire Desktop Environment:</p>
+<ul>
+<li>The compositor wraps the execution of every <code>app_tick</code> in a <code>setjmp</code> environment.</li>
+<li>The hardware PIT (Timer) monitors execution time. If an application hangs, the kernel triggers a <code>longjmp</code> back to the compositor, forcefully closing the misbehaving window and maintaining OS stability.</li>
+</ul>
+<br>
+</body>
+</html>
